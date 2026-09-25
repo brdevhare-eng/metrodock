@@ -1,0 +1,156 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#071B34">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="MetroDock Connect">
+<title>MetroDock Connect</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<style>
+:root{--navy:#071B34;--navy2:#123657;--mint:#15C5A3;--soft:#EAF8F5;--bg:#F4F7FA;--ink:#14263A;--muted:#718197;--line:#DDE6EE;--danger:#D94A55;--warn:#D28A16}
+*{box-sizing:border-box}body{margin:0;background:#dfe8f0;font-family:Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color:var(--ink)}button,input,select{font:inherit}
+.app{width:min(100%,480px);min-height:100vh;margin:auto;background:var(--bg);position:relative;padding-bottom:84px}
+header{padding:18px 18px 12px;background:#fff;position:sticky;top:0;z-index:20;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;align-items:center}
+.brand{display:flex;align-items:center;gap:10px}.logo{width:42px;height:42px;border-radius:14px;background:var(--navy);color:var(--mint);display:grid;place-items:center;font-weight:900}.brand h1{font-size:17px;margin:0}.brand p{font-size:10px;color:var(--muted);margin:3px 0 0}.live{font-size:9px;font-weight:900;padding:7px 9px;border-radius:999px;background:var(--soft);color:#08745f}
+.page{display:none;padding:14px 16px 22px}.page.active{display:block}.hero{background:linear-gradient(135deg,var(--navy),#174b78);color:#fff;border-radius:24px;padding:20px;box-shadow:0 16px 35px rgba(7,27,52,.14)}
+.hero h2{font-size:25px;line-height:1.08;margin:10px 0}.hero p{font-size:12px;color:#c6d5e4;line-height:1.5}.cta{border:0;border-radius:13px;padding:13px 15px;font-weight:850;background:#fff;color:var(--navy)}
+.grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin:14px 0}.metric,.card{background:#fff;border:1px solid var(--line);border-radius:18px;padding:14px}.metric small{font-size:9px;color:var(--muted)}.metric strong{display:block;font-size:22px;margin-top:5px}
+h3{font-size:15px;margin:20px 2px 10px}.station{display:grid;grid-template-columns:46px 1fr auto;gap:10px;align-items:center;background:#fff;border:1px solid var(--line);border-radius:18px;padding:12px;margin:9px 0}.station .count{width:46px;height:46px;border-radius:14px;background:var(--soft);display:grid;place-items:center;font-weight:900;color:#08745f}.station h4{font-size:13px;margin:0 0 4px}.station p{font-size:9px;color:var(--muted);margin:0}.mini{border:0;background:var(--navy);color:#fff;border-radius:11px;padding:9px 10px;font-size:9px;font-weight:850}
+label{display:block;font-size:10px;color:var(--muted);font-weight:750;margin:9px 0}.select,input{width:100%;margin-top:5px;border:1px solid var(--line);border-radius:12px;background:#fff;padding:11px;color:var(--ink)}.route{background:var(--navy);color:#fff;border-radius:20px;padding:15px;margin-top:12px}.route strong{font-size:13px}.route p{font-size:10px;color:#b9ccde;line-height:1.5}
+.primary,.secondary,.danger{width:100%;border:0;border-radius:14px;padding:13px;font-weight:850;margin-top:9px}.primary{background:var(--navy);color:#fff}.secondary{background:#fff;color:var(--navy);border:1px solid var(--line)}.danger{background:var(--danger);color:#fff}
+#map{height:320px;border-radius:22px;border:1px solid var(--line);overflow:hidden;background:#e5edf4}.mapnote{font-size:9px;color:var(--muted);margin:8px 2px}
+.scanner{height:320px;border-radius:24px;background:linear-gradient(145deg,#0C2441,#061326);position:relative;display:grid;place-items:center;overflow:hidden}.qr{width:150px;height:150px;background:repeating-conic-gradient(#071B34 0 25%,#fff 0 50%) 0 0/24px 24px;border:14px solid #fff;border-radius:16px}.scanline{position:absolute;left:38px;right:38px;height:2px;background:var(--mint);box-shadow:0 0 15px var(--mint);animation:scan 2s infinite alternate}@keyframes scan{from{top:45px}to{top:270px}}
+.checks{display:grid;gap:8px;margin-top:12px}.check{display:flex;justify-content:space-between;align-items:center;background:#fff;border:1px solid var(--line);border-radius:13px;padding:11px}.check span{font-size:11px}.ok{font-size:9px;font-weight:900;color:#08745f;background:var(--soft);padding:6px 8px;border-radius:99px}.bad{color:var(--danger);background:#FBEAEC}
+.sensor-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}.sensor{background:#fff;border:1px solid var(--line);border-radius:15px;padding:12px}.sensor small{font-size:9px;color:var(--muted)}.sensor b{display:block;margin-top:5px;font-size:12px}.gateway{background:#fff;border:1px solid var(--line);border-radius:18px;padding:14px;margin-top:12px}.gateway code{font-size:9px;color:var(--muted)}
+.ridebox{background:var(--navy);color:#fff;border-radius:22px;padding:16px}.ridebox .timer{font-size:30px;font-weight:900;color:var(--mint)}.ridecols{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;margin:12px 0}.ridecols div{background:rgba(255,255,255,.08);border-radius:12px;padding:10px}.ridecols small{font-size:8px;color:#a9bfd4}.ridecols b{display:block;margin-top:4px}.notice{padding:12px;border-radius:14px;background:#FFF6DD;color:#7A5B16;font-size:10px;line-height:1.5;margin-top:12px}
+nav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:min(100%,480px);height:74px;background:#fff;border-top:1px solid var(--line);display:grid;grid-template-columns:repeat(5,1fr);z-index:30;padding-bottom:env(safe-area-inset-bottom)}
+nav button{border:0;background:transparent;color:#8796a7;font-size:9px;font-weight:800}nav button b{display:block;font-size:19px;margin-bottom:3px}nav button.active{color:var(--navy)}
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:90px;background:var(--navy);color:#fff;padding:10px 13px;border-radius:12px;font-size:10px;display:none;z-index:50}.toast.show{display:block}
+.modal{position:fixed;inset:0;background:rgba(3,14,27,.6);z-index:60;display:none;align-items:end;justify-content:center;padding:18px}.modal.show{display:flex}.sheet{width:min(100%,440px);background:#fff;border-radius:24px;padding:18px}.sheet h2{font-size:19px;margin:0 0 8px}.sheet p{font-size:11px;color:var(--muted);line-height:1.5}
+</style>
+</head>
+<body>
+<div class="app">
+<header>
+  <div class="brand"><div class="logo">MD</div><div><h1>MetroDock Connect</h1><p>Smart metro last-mile mobility</p></div></div>
+  <span class="live" id="modeBadge">● DEMO</span>
+</header>
+
+<section class="page active" id="home">
+  <div class="hero">
+    <span class="live">SIH PROTOTYPE</span>
+    <h2>Metro to destination,<br>without the last-mile gap.</h2>
+    <p>Find a charged scooter, reserve a destination slot, unlock securely and verify every dock sensor before charging.</p>
+    <button class="cta" data-go="mapPage">Find a MetroDock</button>
+  </div>
+  <div class="grid">
+    <div class="metric"><small>SCOOTERS READY</small><strong>18</strong></div>
+    <div class="metric"><small>EMPTY DOCKS</small><strong>13</strong></div>
+    <div class="metric"><small>CHARGING</small><strong>7</strong></div>
+    <div class="metric"><small>HUB HEALTH</small><strong>96%</strong></div>
+  </div>
+  <h3>Plan a last-mile journey</h3>
+  <div class="card">
+    <label>Start metro station<select class="select" id="fromStation"></select></label>
+    <label>Destination<select class="select" id="destination"><option>COEP Technological University</option><option>JM Road</option><option>Deccan Gymkhana</option><option>Kothrud</option></select></label>
+    <button class="primary" id="planBtn">Find best last-mile option</button>
+    <div class="route" id="routeCard" style="display:none"><strong>Best option: Scooter MD-PN-108</strong><p id="routeText"></p><button class="cta" id="reserveJourney">Reserve scooter + return slot</button></div>
+  </div>
+  <h3>Nearest docking stations</h3>
+  <div id="homeStations"></div>
+  <div class="notice">Pune Metro station locations are real map references. Scooter counts, fares and dock inventory are prototype data for the SIH demonstration.</div>
+</section>
+
+<section class="page" id="mapPage">
+  <h3 style="margin-top:4px">Pune MetroDock map</h3>
+  <div id="map"></div>
+  <p class="mapnote">Tap a marker to see scooter and empty-slot availability.</p>
+  <div id="stationList"></div>
+</section>
+
+<section class="page" id="scan">
+  <h3 style="margin-top:4px">Scan & unlock</h3>
+  <div class="scanner"><div class="qr"></div><div class="scanline"></div></div>
+  <button class="primary" id="scanBtn">Simulate QR scan</button>
+  <button class="secondary" id="manualBtn">Enter scooter code manually</button>
+  <div class="checks" id="preRideChecks"></div>
+</section>
+
+<section class="page" id="ride">
+  <h3 style="margin-top:4px">Current ride</h3>
+  <div class="ridebox" id="rideBox">
+    <small>NO ACTIVE RIDE</small><h2>Reserve and unlock a scooter</h2><p style="font-size:11px;color:#b9ccde">The trip timer, battery, distance and fare will appear here.</p>
+  </div>
+  <h3>Ride history</h3>
+  <div class="station"><div class="count">✓</div><div><h4>Civil Court → COEP area</h4><p>1.6 km • 9 min • returned & charging</p></div><b>₹19</b></div>
+  <div class="station"><div class="count">✓</div><div><h4>Garware College → Deccan</h4><p>2.1 km • 12 min • returned & charging</p></div><b>₹23</b></div>
+  <button class="secondary" id="paymentBtn">Demo wallet / UPI receipt</button>
+  <button class="secondary" id="reportBtn">Report a problem</button>
+</section>
+
+<section class="page" id="hardware">
+  <h3 style="margin-top:4px">Dock hardware status</h3>
+  <div class="sensor-grid" id="sensorGrid"></div>
+  <button class="primary" id="sensorDemoBtn">Run complete sensor sequence</button>
+  <div class="gateway">
+    <b>Live sensor gateway</b>
+    <p style="font-size:10px;color:var(--muted)">When ESP32/PLC is ready, enter its WebSocket endpoint. Incoming JSON updates these same cards directly.</p>
+    <input id="wsUrl" value="ws://192.168.4.1:81" aria-label="WebSocket URL">
+    <button class="secondary" id="connectBtn">Connect live gateway</button>
+    <code>{"scooterDetected":true,"aligned":true,"pinLeft":true,"pinRight":true,"lockConfirmed":true,"chargeContact":true,"charging":true,"battery":84,"estop":false,"signal":-51,"temp":31}</code>
+  </div>
+  <h3>Admin snapshot</h3>
+  <div class="grid"><div class="metric"><small>ACTIVE RIDES</small><strong id="activeCount">0</strong></div><div class="metric"><small>MAINTENANCE</small><strong>1</strong></div></div>
+</section>
+
+<nav>
+  <button class="active" data-go="home"><b>⌂</b>Home</button>
+  <button data-go="mapPage"><b>⌖</b>Map</button>
+  <button data-go="scan"><b>⌗</b>Scan</button>
+  <button data-go="ride"><b>↗</b>Ride</button>
+  <button data-go="hardware"><b>⚙</b>Hardware</button>
+</nav>
+</div>
+
+<div class="modal" id="modal"><div class="sheet" id="sheet"></div></div>
+<div class="toast" id="toast"></div>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+var stations=[
+{name:"Shivajinagar",lat:18.53217,lng:73.84966,scooters:6,slots:5,battery:91},
+{name:"Civil Court / District Court",lat:18.52709,lng:73.85741,scooters:5,slots:4,battery:88},
+{name:"Garware College",lat:18.51199,lng:73.83805,scooters:4,slots:3,battery:82},
+{name:"Vanaz",lat:18.50719,lng:73.80520,scooters:3,slots:1,battery:79}
+];
+var sensors={scooterDetected:false,aligned:false,pinLeft:false,pinRight:false,lockConfirmed:false,chargeContact:false,charging:false,battery:84,estop:false,signal:-51,temp:31};
+var rideStart=null,rideTimer=null,map=null;
+function toast(t){var x=document.getElementById("toast");x.textContent=t;x.classList.add("show");setTimeout(function(){x.classList.remove("show")},2200)}
+function go(id){document.querySelectorAll(".page").forEach(function(p){p.classList.remove("active")});document.getElementById(id).classList.add("active");document.querySelectorAll("nav button").forEach(function(b){b.classList.toggle("active",b.getAttribute("data-go")===id)});if(id==="mapPage"){setTimeout(initMap,80)}}
+document.querySelectorAll("[data-go]").forEach(function(b){b.addEventListener("click",function(){go(b.getAttribute("data-go"))})});
+function stationHTML(s){return '<div class="station"><div class="count">'+s.scooters+'</div><div><h4>'+s.name+'</h4><p>'+s.scooters+' scooters • '+s.slots+' empty slots • '+s.battery+'% avg battery</p></div><button class="mini reserve" data-name="'+s.name+'">Reserve</button></div>'}
+document.getElementById("homeStations").innerHTML=stations.slice(0,3).map(stationHTML).join("");
+document.getElementById("stationList").innerHTML=stations.map(stationHTML).join("");
+document.querySelectorAll(".reserve").forEach(function(b){b.addEventListener("click",function(){openSheet("<h2>Reservation confirmed</h2><p>Scooter MD-PN-108 is held for 10 minutes at "+b.getAttribute("data-name")+". A destination return slot is also reserved for this prototype flow.</p><button class='primary' id='sheetGo'>Continue to QR unlock</button>");setTimeout(function(){var g=document.getElementById("sheetGo");if(g)g.onclick=function(){closeSheet();go("scan")}},0)})});
+var fs=document.getElementById("fromStation");stations.forEach(function(s){var o=document.createElement("option");o.textContent=s.name;fs.appendChild(o)});
+document.getElementById("planBtn").onclick=function(){document.getElementById("routeCard").style.display="block";document.getElementById("routeText").textContent=fs.value+" → scooter 1.4 km → destination. Estimated 11 min, ₹18. Destination dock slot reserved for 10 min.";};
+document.getElementById("reserveJourney").onclick=function(){toast("Scooter + destination slot reserved");go("scan")};
+function initMap(){if(map){map.invalidateSize();return}map=L.map("map").setView([18.522,73.842],13);L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",{maxZoom:19,attribution:"© OpenStreetMap contributors"}).addTo(map);stations.forEach(function(s){L.marker([s.lat,s.lng]).addTo(map).bindPopup("<b>"+s.name+"</b><br>"+s.scooters+" scooters ready<br>"+s.slots+" empty return slots")})}
+function renderChecks(){var arr=[["Dock communication",true],["Mechanical lock release",!sensors.lockConfirmed],["Battery level",sensors.battery>20],["Emergency stop clear",!sensors.estop]];document.getElementById("preRideChecks").innerHTML=arr.map(function(x){return '<div class="check"><span>'+x[0]+'</span><b class="ok '+(x[1]?"":"bad")+'">'+(x[1]?"PASS":"CHECK")+'</b></div>'}).join("")}renderChecks();
+document.getElementById("scanBtn").onclick=function(){this.textContent="Verifying dock + scooter…";var btn=this;setTimeout(function(){renderChecks();btn.textContent="Start ride";btn.onclick=startRide;toast("Scooter MD-PN-108 unlocked safely")},1200)};
+document.getElementById("manualBtn").onclick=function(){openSheet("<h2>Manual unlock</h2><p>Enter the 6-character code printed below the scooter QR label.</p><input id='manualCode' value='MD0108'><button class='primary' id='manualUnlock'>Unlock</button>");setTimeout(function(){document.getElementById("manualUnlock").onclick=function(){closeSheet();document.getElementById("scanBtn").click()}},0)};
+function startRide(){rideStart=Date.now();document.getElementById("activeCount").textContent="1";go("ride");clearInterval(rideTimer);rideTimer=setInterval(renderRide,1000);renderRide()}
+function renderRide(){if(!rideStart)return;var sec=Math.floor((Date.now()-rideStart)/1000);var mm=String(Math.floor(sec/60)).padStart(2,"0"),ss=String(sec%60).padStart(2,"0");document.getElementById("rideBox").innerHTML='<small>ACTIVE RIDE • MD-PN-108</small><div class="timer">'+mm+':'+ss+'</div><div class="ridecols"><div><small>BATTERY</small><b>'+Math.max(20,92-Math.floor(sec/180))+'%</b></div><div><small>DISTANCE</small><b>'+(sec*.003).toFixed(1)+' km</b></div><div><small>FARE</small><b>₹'+Math.max(5,Math.ceil(sec/60)*3)+'</b></div></div><button class="danger" id="endRide">Return to reserved dock</button>';document.getElementById("endRide").onclick=endRide}
+function endRide(){clearInterval(rideTimer);rideStart=null;document.getElementById("activeCount").textContent="0";sensors.scooterDetected=true;sensors.aligned=true;sensors.pinLeft=true;sensors.pinRight=true;sensors.lockConfirmed=true;sensors.chargeContact=true;sensors.charging=true;renderSensors();openSheet("<h2>Ride completed ✓</h2><p>Scooter detected, aligned, mechanically locked and charging enabled. Demo receipt: ₹18.</p><button class='primary' id='doneBtn'>Done</button>");setTimeout(function(){document.getElementById("doneBtn").onclick=function(){closeSheet();go("hardware")}},0)}
+var sensorLabels={scooterDetected:"Scooter detected",aligned:"Wheel / suspension aligned",pinLeft:"Left spring pin",pinRight:"Right spring pin",lockConfirmed:"Lock confirmation switches",chargeContact:"Charging contacts",charging:"Charger contactor",battery:"Battery",estop:"Emergency stop",signal:"Gateway signal",temp:"Dock temperature"};
+function sensorValue(k){var v=sensors[k];if(typeof v==="boolean")return v?"CONFIRMED":"OPEN";if(k==="battery")return v+"%";if(k==="signal")return v+" dBm";if(k==="temp")return v+" °C";return v}
+function renderSensors(){document.getElementById("sensorGrid").innerHTML=Object.keys(sensorLabels).map(function(k){var good=k==="estop"?!sensors[k]:(typeof sensors[k]==="boolean"?sensors[k]:true);return '<div class="sensor"><small>'+sensorLabels[k]+'</small><b class="'+(good?"":"bad")+'">'+sensorValue(k)+'</b></div>'}).join("")}renderSensors();
+document.getElementById("sensorDemoBtn").onclick=function(){var seq=["scooterDetected","aligned","pinLeft","pinRight","lockConfirmed","chargeContact","charging"];seq.forEach(function(k){sensors[k]=false});renderSensors();var i=0;var t=setInterval(function(){sensors[seq[i]]=true;renderSensors();toast(sensorLabels[seq[i]]+" ✓");i++;if(i>=seq.length){clearInterval(t);toast("Dock locked and charging safely")}},500)};
+document.getElementById("connectBtn").onclick=function(){var url=document.getElementById("wsUrl").value.trim();try{var ws=new WebSocket(url);document.getElementById("modeBadge").textContent="● CONNECTING";ws.onopen=function(){document.getElementById("modeBadge").textContent="● LIVE";toast("Live sensor gateway connected")};ws.onmessage=function(e){try{var d=JSON.parse(e.data);Object.keys(sensors).forEach(function(k){if(d[k]!==undefined)sensors[k]=d[k]});renderSensors()}catch(x){}};ws.onerror=function(){document.getElementById("modeBadge").textContent="● DEMO";toast("Gateway unavailable — demo mode kept")};ws.onclose=function(){document.getElementById("modeBadge").textContent="● DEMO"}}catch(e){toast("Invalid WebSocket address")}};
+document.getElementById("paymentBtn").onclick=function(){openSheet("<h2>Demo wallet / UPI</h2><p>Wallet balance: ₹250<br>Last ride: ₹19<br>Payment mode: UPI demo<br><br>No real payment is processed in this prototype.</p><button class='primary' id='doneBtn'>Close</button>");setTimeout(function(){document.getElementById("doneBtn").onclick=closeSheet},0)};
+document.getElementById("reportBtn").onclick=function(){openSheet("<h2>Report a problem</h2><p>Choose an issue: lock jammed, charging not starting, QR damaged, scooter damaged, dock full, or emergency.</p><select class='select'><option>Mechanical lock not engaging</option><option>Charging not starting</option><option>QR code damaged</option><option>Scooter damaged</option><option>Dock full</option><option>Emergency / accident</option></select><button class='primary' id='doneBtn'>Create demo maintenance ticket</button>");setTimeout(function(){document.getElementById("doneBtn").onclick=function(){closeSheet();toast("Maintenance ticket MD-WK-204 created")}},0)};
+function openSheet(html){document.getElementById("sheet").innerHTML=html;document.getElementById("modal").classList.add("show")}function closeSheet(){document.getElementById("modal").classList.remove("show")}document.getElementById("modal").onclick=function(e){if(e.target===this)closeSheet()};
+</script>
+</body>
+</html>
